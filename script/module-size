@@ -3,13 +3,17 @@ use strict;
 use warnings;
 use Memory::Usage;
 
-my ($module_name) = shift || die "Usage: $0 Module::Name\n";
+if( scalar @ARGV < 1 ) {
+	die "Usage: $0 Module::Name\n";
+}
 
 my $m = Memory::Usage->new();
-$m->record('Base perl+Memory::Usage');
-eval "use $module_name";
-warn $@ if $@;
-$m->record("after 'use $module_name'");
+$m->record('Base perl plus Memory::Usage');
+foreach my $module_name (@ARGV) {
+	eval "use $module_name";
+	warn $@ if $@;
+	$m->record("after 'use $module_name'");
+}
 
 $m->dump();
 
@@ -21,11 +25,14 @@ module-size -- Spit out estimated size of module code.
 
 =head1 SYNOPSIS
 
-    module-size Some::Module::Name
+    module-size Some::Module::Name [ Other::Module ]
 
 =head1 DESCRIPTION
 
-Reports the process size after 'use'ing a module.
+Reports the process size after 'use'ing a module.  If more than one module name
+is provided, the modules are included in order, allowing you to compare (for
+example) the incremental effect of adding other modules to an existing
+application.
 
 =head1 SEE ALSO
 
