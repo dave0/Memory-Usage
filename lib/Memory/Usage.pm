@@ -103,9 +103,41 @@ sub record
 	];
 }
 
+=item report ( )
+
+Generates report on memory usage.
+
+=cut
+
+sub report
+{
+	my ($self) = @_;
+
+	my $report = sprintf "%6s %6s (%6s) %6s (%6s)\n",
+		'time',
+		'vsz',
+		'diff',
+		'rss',
+		'diff';
+
+	my $prev = [ undef, undef, 0, 0 ];
+	foreach (@$self) {
+		$report .= sprintf "% 6d % 6d (% 6d) % 6d (% 6d) %s\n",
+			($_->[0] - $self->[0][0]),
+			$_->[2],
+			($_->[2] - $prev->[2]),
+			$_->[3],
+			($_->[3] - $prev->[3]),
+			$_->[1];
+		$prev = $_;
+	}
+
+	return $report;
+}
+
 =item dump ( )
 
-Dumps out memory usage to stderr.
+Prints report on memory usage to stderr.
 
 =back
 
@@ -115,24 +147,7 @@ sub dump
 {
 	my ($self) = @_;
 
-	printf STDERR "%6s %6s (%6s) %6s (%6s)\n",
-		'time',
-		'vsz',
-		'diff',
-		'rss',
-		'diff';
-
-	my $prev = [ undef, undef, 0, 0 ];
-	foreach (@$self) {
-		printf STDERR "% 6d % 6d (% 6d) % 6d (% 6d) %s\n",
-			($_->[0] - $self->[0][0]),
-			$_->[2],
-			($_->[2] - $prev->[2]),
-			$_->[3],
-			($_->[3] - $prev->[3]),
-			$_->[1];
-		$prev = $_;
-	}
+	print STDERR $self->report();
 }
 
 =item state ( )
