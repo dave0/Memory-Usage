@@ -1,0 +1,42 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+use Memory::Usage;
+
+my ($module_name) = shift || die "Usage: $0 Module::Name\n";
+
+my $m = Memory::Usage->new();
+$m->record('Base perl+Memory::Usage');
+eval "use $module_name";
+warn $@ if $@;
+$m->record("after 'use $module_name'");
+
+$m->dump();
+
+__END__
+
+=head1 NAME
+
+module-size -- Spit out estimated size of module code.
+
+=head1 SYNOPSIS
+
+    module-size Some::Module::Name
+
+=head1 DESCRIPTION
+
+Reports the process size after 'use'ing a module.
+
+=head1 SEE ALSO
+
+L<Memory::Usage>, 
+
+=head1 LICENCE AND COPYRIGHT
+
+Copyright 2010 Dave O'Neill.
+
+This program is free software; you can redistribute it and/or modify it
+under the terms of either: the GNU General Public License as published
+by the Free Software Foundation; or the Artistic License.
+
+=cut

@@ -113,15 +113,22 @@ sub dump
 {
 	my ($self) = @_;
 
+	printf STDERR "%6s %6s (%6s) %6s (%6s)\n",
+		'time',
+		'vsz',
+		'diff',
+		'rss',
+		'diff';
+
 	my $prev = [ undef, undef, 0, 0 ];
 	foreach (@$self) {
-		printf STDERR "% 10d %30s % 6d (% 6d) % 6d (% 6d)\n",
+		printf STDERR "% 6d % 6d (% 6d) % 6d (% 6d) %s\n",
 			($_->[0] - $self->[0][0]),
-			$_->[1],
 			$_->[2],
 			($_->[2] - $prev->[2]),
 			$_->[3],
-			($_->[3] - $prev->[3]);
+			($_->[3] - $prev->[3]),
+			$_->[1];
 		$prev = $_;
 	}
 }
