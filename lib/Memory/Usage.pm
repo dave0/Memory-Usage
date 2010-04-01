@@ -12,7 +12,7 @@ Version 0.100
 
 =cut
 
-our $VERSION = '0.100';
+our $VERSION = '0.200';
 
 
 =head1 SYNOPSIS
@@ -65,10 +65,12 @@ sub new
 	return bless $self, $class;
 }
 
-# TODO: Proc::ProcessTable, or is that too much overhead
-# TODO: non-Linux?
 # Returns vsz and rss in kB, though not to good precision given that we get
 # back page-counts (4k pages).
+# TODO: Proc::ProcessTable, or is that too much overhead?
+# TODO: non-Linux?
+# TODO: parse /proc/$$/stat instead, as it gives exact byte value for vsize?  Do we care?
+# TODO: text vs data+stack as well?
 sub _get_vsz_rss
 {
 	my ($class) = @_;
@@ -131,6 +133,32 @@ sub dump
 			$_->[1];
 		$prev = $_;
 	}
+}
+
+=item state ( )
+
+Return arrayref of internal state.  Returned arrayref contains zero or more
+references to arrays with the following columns (in order):
+
+=over 4
+
+=item timestamp (in seconds since epoch)
+
+=item message (as passed to ->record())
+
+=item virtual memory size, in kilobytes
+
+=item resident set size, in kilobytes
+
+=back
+
+=cut
+
+sub state
+{
+	my ($self) = @_;
+
+	return $self;
 }
 
 
