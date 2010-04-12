@@ -8,7 +8,7 @@ Memory::Usage - Tools to determine actual memory usage
 
 =head1 VERSION
 
-Version 0.100
+Version 0.200
 
 =cut
 
@@ -139,7 +139,6 @@ sub report
 
 Prints report on memory usage to stderr.
 
-=back
 
 =cut
 
@@ -176,6 +175,9 @@ sub state
 	return $self;
 }
 
+=pod
+
+=back
 
 =head1 AUTHOR
 
