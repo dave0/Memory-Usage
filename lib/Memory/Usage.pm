@@ -72,9 +72,9 @@ sub new
 my $page_size_in_kb = 4;
 sub _get_mem_data
 {
-	my ($class) = @_;
+	my ($class, $pid) = @_;
 
-	sysopen(my $fh, "/proc/$$/statm", 0) or die $!;
+	sysopen(my $fh, "/proc/$pid/statm", 0) or die $!;
 	sysread($fh, my $line, 255) or die $!;
 	close($fh);
 	my ($vsz, $rss, $share, $text, $crap, $data, $crap2) = split(/\s+/, $line,  7);
@@ -85,20 +85,24 @@ sub _get_mem_data
 
 =over 4
 
-=item record ( $message )
+=item record ( $message [, $pid ])
 
-Record the memory usage at call time, logging it internally with the provided message.
+Record the memory usage at call time, logging it internally with the provided
+message.  Optionally takes a process ID to record memory usage for, defaulting
+to the current process.
 
 =cut
 
 sub record
 {
-	my ($self, $message) = @_;
+	my ($self, $message, $pid) = @_;
+
+	$pid ||= $$;
 
 	push @$self, [
 		time(),
 		$message,
-		$self->_get_mem_data($$)
+		$self->_get_mem_data($pid)
 	];
 }
 
