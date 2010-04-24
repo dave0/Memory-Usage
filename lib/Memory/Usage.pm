@@ -65,21 +65,20 @@ sub new
 	return bless $self, $class;
 }
 
-# Returns vsz and rss in kB, though not to good precision given that we get
-# back page-counts (4k pages).
-# TODO: Proc::ProcessTable, or is that too much overhead?
-# TODO: non-Linux?
-# TODO: parse /proc/$$/stat instead, as it gives exact byte value for vsize?  Do we care?
-# TODO: text vs data+stack as well?
-sub _get_vsz_rss
+# Returns
+#  (vsize, rss, shared pages, code pages, data+stack pages)
+# in kilobytes.  Precision is to nearest 4k page.
+# TODO: Proc::ProcessTable so that we can support non-Linux?
+my $page_size_in_kb = 4;
+sub _get_mem_data
 {
 	my ($class) = @_;
 
 	sysopen(my $fh, "/proc/$$/statm", 0) or die $!;
 	sysread($fh, my $line, 255) or die $!;
 	close($fh);
-	my ($vsz, $rss, $crap) = split(/\s+/, $line,  3);
-	return ($vsz * 4, $rss * 4);
+	my ($vsz, $rss, $share, $text, $crap, $data, $crap2) = split(/\s+/, $line,  7);
+	return map { $_ * $page_size_in_kb } ($vsz, $rss, $share, $text, $data);
 }
 
 =head2 Instance Methods
@@ -99,7 +98,7 @@ sub record
 	push @$self, [
 		time(),
 		$message,
-		$self->_get_vsz_rss($$)
+		$self->_get_mem_data($$)
 	];
 }
 
@@ -113,21 +112,33 @@ sub report
 {
 	my ($self) = @_;
 
-	my $report = sprintf "%6s %6s (%6s) %6s (%6s)\n",
+	my $report = sprintf "%6s %6s (%6s) %6s (%6s) %6s (%6s) %6s (%6s) %6s (%6s)\n",
 		'time',
 		'vsz',
 		'diff',
 		'rss',
+		'diff',
+		'shared',
+		'diff',
+		'code',
+		'diff',
+		'data',
 		'diff';
 
-	my $prev = [ undef, undef, 0, 0 ];
+	my $prev = [ undef, undef, 0, 0, 0, 0, 0 ];
 	foreach (@$self) {
-		$report .= sprintf "% 6d % 6d (% 6d) % 6d (% 6d) %s\n",
+		$report .= sprintf "% 6d % 6d (% 6d) % 6d (% 6d) % 6d (% 6d) % 6d (% 6d) % 6d (% 6d) %s\n",
 			($_->[0] - $self->[0][0]),
 			$_->[2],
 			($_->[2] - $prev->[2]),
 			$_->[3],
 			($_->[3] - $prev->[3]),
+			$_->[4],
+			($_->[4] - $prev->[4]),
+			$_->[5],
+			($_->[5] - $prev->[5]),
+			$_->[6],
+			($_->[6] - $prev->[6]),
 			$_->[1];
 		$prev = $_;
 	}
@@ -152,7 +163,8 @@ sub dump
 =item state ( )
 
 Return arrayref of internal state.  Returned arrayref contains zero or more
-references to arrays with the following columns (in order):
+references to arrays with the following columns (in order).  All sizes are in
+kilobytes.
 
 =over 4
 
@@ -160,9 +172,15 @@ references to arrays with the following columns (in order):
 
 =item message (as passed to ->record())
 
-=item virtual memory size, in kilobytes
+=item virtual memory size
 
-=item resident set size, in kilobytes
+=item resident set size
+
+=item shared memory size
+
+=item text (aka code or exe) size
+
+=item data and stack size
 
 =back
 
