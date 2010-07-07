@@ -8,11 +8,11 @@ Memory::Usage - Tools to determine actual memory usage
 
 =head1 VERSION
 
-Version 0.200
+Version 0.201
 
 =cut
 
-our $VERSION = '0.200';
+our $VERSION = '0.201';
 
 
 =head1 SYNOPSIS
